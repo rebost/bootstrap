@@ -181,7 +181,7 @@
     var $nextLazyImgArray = $next.find('img[lazy-src]')
     if ($nextLazyImgArray.length) {
         this.load($nextLazyImgArray)
-        return
+        return this
     }
     // LAZY LOAD END
 
