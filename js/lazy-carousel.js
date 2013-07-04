@@ -50,7 +50,7 @@
         // console.log($this,' loaded');
         $this.attr('lazy-load', 'success')
         that.remaining--;
-        if (that.remaining == 0) that.resume($this)
+        if (that.remaining === 0) that.resume($this)
     })
     .error(function() {
         var $this = $(this)
