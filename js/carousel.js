@@ -36,6 +36,30 @@
     this.options.pause == 'hover' && this.$element
       .on('mouseenter', $.proxy(this.pause, this))
       .on('mouseleave', $.proxy(this.cycle, this))
+
+    // LAZY LOAD 1 START
+    // ==========================
+    // this: our carousel
+    // this.$element: $('div#myCarousel.carousel')
+    var that = this;
+
+    this.loading = this.$element.find('.loading');
+    this.lazy_elements = this.$element.find('.item img[lazy-src]')
+    // we set the function that will be executed once an image is loaded
+    this.lazy_elements.load(function() {
+        var $this = $(this)
+        // console.log($this,' loaded');
+        $this.attr('lazy-load', 'success')
+        that.remaining--;
+        if (that.remaining === 0) that.resume($this)
+    })
+    .error(function() {
+        var $this = $(this)
+        $this.attr('lazy-load', 'error')
+        that.resume($this)
+    })
+    // ==========================
+    // LAZY LOAD 1 END
   }
 
   Carousel.DEFAULTS = {
@@ -97,6 +121,38 @@
     return this.slide('prev')
   }
 
+  // LAZY LOAD 2 START
+  // ==========================
+  Carousel.prototype.load = function (img_array) {
+    // console.log('loading the images in the array');
+    // we now set to loading the images in the array
+    var that = this;
+    that.remaining = img_array.length
+    that.sliding = false
+    that.loading.removeClass('hide')
+    img_array.each(function () {
+      var img = $(this);
+      // console.log('starting to load', img);
+      img.attr('src', img.attr('lazy-src'))
+      img.removeAttr('lazy-src')
+      img.attr('lazy-load', 'loading')
+    })
+  }
+
+  Carousel.prototype.resume = function (img) {
+    // console.log('resume', img);
+    var $next = img.parents('.item')
+      , children = $next.parents('.carousel-inner').children()
+      , nextPos = children.index($next)
+
+    this.loading.addClass('hide')
+    this.to(nextPos)
+
+    this.options.interval && this.cycle()
+  }
+  // ==========================
+  // LAZY LOAD 2 END
+
   Carousel.prototype.slide = function (type, next) {
     var $active   = this.$element.find('.item.active')
     var $next     = next || $active[type]()
@@ -122,6 +178,18 @@
         $nextIndicator && $nextIndicator.addClass('active')
       })
     }
+
+    // LAZY LOAD 3 START
+    // ==========================
+    // console.log('Finding the lazy-images contained in the next slide...');
+    // $nextLazyImgArray: the lazy-images contained in the next slide
+    var $nextLazyImgArray = $next.find('img[lazy-src]')
+    if ($nextLazyImgArray.length) {
+        this.load($nextLazyImgArray)
+        return this
+    }
+    // ==========================
+    // LAZY LOAD 3 END
 
     if ($.support.transition && this.$element.hasClass('slide')) {
       this.$element.trigger(e)
